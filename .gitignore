@@ -1,0 +1,22 @@
+# Env
+.env
+.env.local
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
+
+# Docker
+*.log
