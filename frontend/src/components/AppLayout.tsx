@@ -1,4 +1,21 @@
-// Authenticated shell: Header + Sidebar + <Outlet />
+import { useState } from 'react';
+import { Outlet } from 'react-router-dom';
+import Header from '../components/Header';
+import Sidebar from '../components/Sidebar';
+
 export default function AppLayout() {
-  return <div>AppLayout — to be implemented</div>;
-}
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  return (
+    <div className="flex min-h-screen bg-bg text-text">
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+      <div className="flex min-h-screen flex-1 flex-col">
+        <Header onMenuClick={() => setSidebarOpen(true)} />
+        <main className="flex-1 p-4 sm:p-6">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+} 
