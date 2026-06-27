@@ -2,8 +2,8 @@ import { Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import ProtectedRoute from './routes/ProtectedRoute';
-import AppLayout from './layouts/AppLayout';
+import ProtectedRoute from './components/ProtectedRoute';
+import AppLayout from './components/AppLayout';
 
 // Placeholder pages — real implementations land in Phases 2-6.
 // Keeping them here for now means the shell/routing is fully testable

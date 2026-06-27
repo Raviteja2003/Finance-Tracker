@@ -1,13 +1,20 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+
+type Theme = 'light' | 'dark';
+
+type ThemeContextValue = {
+  theme: Theme;
+  toggleTheme: () => void;
+};
 
 // Deliberately NOT in Redux. Theme is local, UI-only state with exactly
 // one consumer concern (which CSS class is on <html>) and nothing else
 // in the app needs to react to it or coordinate around it. That's the
 // signature of a good Context use case, in contrast to filtersSlice
-// which is genuinely cross-cutting. See filtersSlice.js for the contrast.
-const ThemeContext = createContext(undefined);
+// which is genuinely cross-cutting.
+const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
-function getInitialTheme() {
+function getInitialTheme(): Theme {
   const stored = localStorage.getItem('ft_theme');
   if (stored === 'light' || stored === 'dark') return stored;
   return window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -15,8 +22,8 @@ function getInitialTheme() {
     : 'light';
 }
 
-export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(getInitialTheme);
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -24,7 +31,7 @@ export function ThemeProvider({ children }) {
     localStorage.setItem('ft_theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
+  const toggleTheme = () => setTheme((current) => (current === 'dark' ? 'light' : 'dark'));
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>

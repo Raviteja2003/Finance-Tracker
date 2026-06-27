@@ -1,12 +1,16 @@
-// Redux Toolkit store — slices are wired in here as each phase is built.
-// Phase 1: authSlice only. RTK Query base API added alongside it.
-import { configureStore } from "@reduxjs/toolkit";
+import { configureStore } from '@reduxjs/toolkit';
+import { apiSlice } from './slices/apiSlice';
+import authReducer from './slices/authSlice';
+import accountsReducer from './slices/accountsSlice';
+import filtersReducer from './slices/filtersSlice';
 
 export const store = configureStore({
   reducer: {
-    // auth: authReducer,  // wired up in Phase 1
+    auth: authReducer,
+    accounts: accountsReducer,
+    filters: filtersReducer,
+    [apiSlice.reducerPath]: apiSlice.reducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(apiSlice.middleware),
 });
-
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
