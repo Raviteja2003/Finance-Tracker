@@ -1,5 +1,11 @@
-import { apiSlice } from './apiSlice';
+import { apiSlice } from '../store/slices/apiSlice';
 
+/**
+ * Accounts API endpoints injected into the shared RTK Query API slice.
+ *
+ * Provides queries and mutations for account CRUD operations and uses
+ * cache tags to keep the account list and individual account data in sync.
+ */
 export const accountsApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getAccounts: builder.query({
@@ -38,6 +44,9 @@ export const accountsApi = apiSlice.injectEndpoints({
   }),
 });
 
+/**
+ * Exported hooks for account data operations.
+ */
 export const {
   useGetAccountsQuery,
   useCreateAccountMutation,

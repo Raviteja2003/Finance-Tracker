@@ -1,28 +1,47 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useRegisterMutation, useLoginMutation } from '../services/authApi';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  registerUser,
+  loginUser,
+  selectAuthStatus,
+  selectAuthError,
+} from '../store/slices/authSlice';
 
+/**
+ * Registration page component.
+ *
+ * Renders a sign-up form that creates a user account and automatically logs
+ * them in upon successful registration, then redirects to the dashboard.
+ */
 export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [register, { isLoading: isRegistering, error: registerError }] =
-    useRegisterMutation();
-  const [login, { isLoading: isLoggingIn }] = useLoginMutation();
+  const dispatch = useDispatch<any>();
+  const status = useSelector(selectAuthStatus);
+  const error = useSelector(selectAuthError);
+  const isLoading = status === 'loading';
   const navigate = useNavigate();
 
-  const isLoading = isRegistering || isLoggingIn;
-
+  /**
+   * Handles the registration form submission.
+   *
+   * Calls registerUser first to create the account. If successful,
+   * chains into loginUser to sign the user in immediately.
+   * Redirects to the dashboard on successful login.
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      await register({ name, email, password }).unwrap();
-      // Backend's register endpoint returns the created user, not a token,
-      // so chain straight into login to land the user signed in.
-      await login({ email, password }).unwrap();
+
+    const registerResult = await dispatch(registerUser({ name, email, password }));
+    if (!registerUser.fulfilled.match(registerResult)) return; // error already in state
+
+    // Backend's /auth/register returns the created user, not a token,
+    // so chain straight into loginUser to land the user signed in -
+    const loginResult = await dispatch(loginUser({ email, password }));
+    if (loginUser.fulfilled.match(loginResult)) {
       navigate('/dashboard', { replace: true });
-    } catch {
-      // registerError below reflects the failure
     }
   };
 
@@ -76,11 +95,7 @@ export default function Register() {
             />
           </div>
 
-          {registerError && (
-            <p className="text-sm text-danger">
-              {registerError.data?.detail || 'Could not create account.'}
-            </p>
-          )}
+          {error && <p className="text-sm text-danger">{error}</p>}
 
           <button
             type="submit"

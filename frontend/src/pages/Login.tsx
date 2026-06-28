@@ -1,23 +1,26 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useLoginMutation } from '../services/authApi';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser, selectAuthStatus, selectAuthError } from '../store/slices/authSlice';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [login, { isLoading, error }] = useLoginMutation();
+  const dispatch = useDispatch<any>();
+  const status = useSelector(selectAuthStatus);
+  const error = useSelector(selectAuthError);
+  const isLoading = status === 'loading';
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = location.state?.from?.pathname || '/dashboard';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      await login({ email, password }).unwrap();
+    const result = await dispatch(loginUser({ email, password }));
+    if (loginUser.fulfilled.match(result)) {
       navigate(redirectTo, { replace: true });
-    } catch {
-      // error state below already reflects the failure
     }
+    // on rejection, `error` from the selector already reflects the failure
   };
 
   return (
@@ -57,11 +60,7 @@ export default function Login() {
             />
           </div>
 
-          {error && (
-            <p className="text-sm text-danger">
-              {error.data?.detail || 'Could not log in. Check your credentials.'}
-            </p>
-          )}
+          {error && <p className="text-sm text-red-900 text-danger">{error}</p>}
 
           <button
             type="submit"
