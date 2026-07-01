@@ -1,13 +1,27 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
-// Deliberately NOT in Redux. Theme is local, UI-only state with exactly
-// one consumer concern (which CSS class is on <html>) and nothing else
-// in the app needs to react to it or coordinate around it. That's the
-// signature of a good Context use case, in contrast to filtersSlice
-// which is genuinely cross-cutting. See filtersSlice.js for the contrast.
-const ThemeContext = createContext(undefined);
+/**
+ * Supported UI themes for the application.
+ */
+type Theme = 'light' | 'dark';
 
-function getInitialTheme() {
+/**
+ * The values exposed by the theme context.
+ */
+type ThemeContextValue = {
+  theme: Theme;
+  toggleTheme: () => void;
+};
+
+/**
+ * Create a context.
+ */
+const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
+
+/**
+ * Returns the initial theme based on the saved preference or the user's system preference.
+ */
+function getInitialTheme(): Theme {
   const stored = localStorage.getItem('ft_theme');
   if (stored === 'light' || stored === 'dark') return stored;
   return window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -15,17 +29,33 @@ function getInitialTheme() {
     : 'light';
 }
 
-export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(getInitialTheme);
+/**
+ * Create a provider component that will wrap the app and provide the theme context to all components.
+ * Here {children} is object destructuring, otherwise it would be {props.children}.
+ */
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  /**
+   * A state variable is created to hold the current theme, and a function to toggle the theme.
+   */
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
 
+  /**
+   * The useEffect hook is used to update the document's class list and localStorage whenever the theme changes.
+   */
   useEffect(() => {
     const root = document.documentElement;
     root.classList.toggle('dark', theme === 'dark');
     localStorage.setItem('ft_theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
+  /**
+   * Toggle the theme between 'light' and 'dark'. The setTheme function is called with a callback that receives the current theme and returns the opposite theme.
+   */
+  const toggleTheme = () => setTheme((current) => (current === 'dark' ? 'light' : 'dark'));
 
+  /**
+   * Pass the current theme and the toggle function to the context provider's value prop, so that any component that consumes this context can access them.
+   */
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
       {children}
@@ -33,6 +63,11 @@ export function ThemeProvider({ children }) {
   );
 }
 
+/**
+ * Returns the theme context value from within a ThemeProvider.
+ *
+ * @throws Error if used outside of ThemeProvider.
+ */
 export function useTheme() {
   const ctx = useContext(ThemeContext);
   if (!ctx) throw new Error('useTheme must be used within a ThemeProvider');

@@ -1,8 +1,7 @@
-import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Menu, Moon, Sun, LogOut, User } from 'lucide-react';
-import { logout, selectCurrentUser } from '../features/auth/authSlice';
+import { logout, selectCurrentUser } from '../store/slices/authSlice';
 import { useTheme } from '../context/ThemeContext';
 
 export default function Header({ onMenuClick }) {
@@ -10,15 +9,15 @@ export default function Header({ onMenuClick }) {
   const navigate = useNavigate();
   const user = useSelector(selectCurrentUser);
   const { theme, toggleTheme } = useTheme();
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = () => {
     dispatch(logout());
-    navigate('/login');
+    navigate('/');
   };
 
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-surface px-4 sm:px-6">
+      {/* Left side: Menu & Title */}
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -31,7 +30,9 @@ export default function Header({ onMenuClick }) {
         <span className="text-lg font-semibold text-text">Finance Tracker</span>
       </div>
 
+      {/* Right side: All items in parallel */}
       <div className="flex items-center gap-2">
+        {/* Theme Toggle */}
         <button
           type="button"
           onClick={toggleTheme}
@@ -41,31 +42,23 @@ export default function Header({ onMenuClick }) {
           {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
         </button>
 
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setMenuOpen((open) => !open)}
-            className="flex items-center gap-2 rounded-md p-2 text-muted hover:bg-surface-hover"
-          >
-            <User size={18} />
-            <span className="hidden text-sm sm:inline">
-              {user?.name || user?.email || 'Account'}
-            </span>
-          </button>
-
-          {menuOpen && (
-            <div className="absolute right-0 mt-2 w-40 rounded-md border border-border bg-surface py-1 shadow-lg">
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="flex w-full items-center gap-2 px-3 py-2 text-sm text-text hover:bg-surface-hover"
-              >
-                <LogOut size={16} />
-                Log out
-              </button>
-            </div>
-          )}
+        {/* User Info (Now just a flat layout block, not a clickable menu trigger) */}
+        <div className="flex items-center gap-2 rounded-md p-2 text-muted">
+          <User size={18} />
+          <span className="hidden text-sm sm:inline">
+            {user?.name || user?.email || 'Account'}
+          </span>
         </div>
+
+        {/* Log Out Button (Parallel to everything else) */}
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex items-center gap-2 rounded-md p-2 text-text hover:bg-surface-hover text-sm"
+        >
+          <LogOut size={16} />
+          <span className="hidden sm:inline">Log out</span>
+        </button>
       </div>
     </header>
   );
