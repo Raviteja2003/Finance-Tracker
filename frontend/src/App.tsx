@@ -4,26 +4,12 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ProtectedRoute from './components/ProtectedRoute';
 import AppLayout from './components/AppLayout';
-
-/**
- * Placeholder pages — real implementations land in Phases 2-6.
- * Keeping them here for now means the shell/routing is fully testable
- * before any feature work starts.
- */
-/**
- * Simple placeholder component used for routes that are not yet implemented.
- *
- * @param props.title - Title displayed in the placeholder card.
- * @returns A styled placeholder element indicating the feature is coming later.
- */
-function Placeholder({ title }: { title: string }) {
-  return (
-    <div className="rounded-lg border border-border bg-surface p-6">
-      <h2 className="text-lg font-semibold text-text">{title}</h2>
-      <p className="mt-1 text-sm text-muted">Coming in a later phase.</p>
-    </div>
-  );
-}
+import Accounts from './pages/Accounts';
+import Dashboard from './pages/Dashboard';
+import Transactions from './pages/Transactions';
+import Budgets from './pages/Budgets';
+import Analytics from './pages/Analytics';
+import ChatAssistant from './pages/ChatAssistant';
 
 /**
  * Application route definitions.
@@ -48,16 +34,16 @@ export default function App() {
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
-          <Route path="/dashboard" element={<Placeholder title="Dashboard" />} />
-          <Route path="/transactions" element={<Placeholder title="Transactions" />} />
-          <Route path="/accounts" element={<Placeholder title="Accounts" />} />
-          <Route path="/budgets" element={<Placeholder title="Budgets" />} />
-          <Route path="/analytics" element={<Placeholder title="Analytics" />} />
-          <Route path="/chatbot" element={<Placeholder title="Chatbot" />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/transactions" element={<Transactions />} />
+          <Route path="/accounts" element={<Accounts />} />
+          <Route path="/budgets" element={<Budgets/>} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/chatbot" element={<ChatAssistant />} />
         </Route>
       </Route>
 
-      <Route path="*" element={<Placeholder title="Page not found" />} />
+      
     </Routes>
   );
 }
