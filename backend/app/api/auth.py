@@ -7,6 +7,10 @@ from app.services import auth_service
 from app.api.deps import get_current_user
 from app.models.user import User
 
+""""
+    APIRouter is a class provided by FastAPI for creating API roters. 
+    It allows us to group related endpoints together and apply common configurations to them, such as prefix, tags and dependencies. 
+"""
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
