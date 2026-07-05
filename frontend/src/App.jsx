@@ -21,9 +21,6 @@ import ChatAssistant from './pages/ChatAssistant';
  *
  * Protected routes (require authentication) are wrapped with `ProtectedRoute`
  * and rendered inside `AppLayout`.
- *
- * Several feature routes currently render `Placeholder` components until
- * their full implementations are added in later phases.
  */
 export default function App() {
   return (
@@ -37,13 +34,11 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/accounts" element={<Accounts />} />
-          <Route path="/budgets" element={<Budgets/>} />
+          <Route path="/budgets" element={<Budgets />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/chatbot" element={<ChatAssistant />} />
         </Route>
       </Route>
-
-      
     </Routes>
   );
 }

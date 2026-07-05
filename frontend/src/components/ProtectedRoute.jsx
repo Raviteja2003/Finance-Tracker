@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useAppSelector } from '../hooks/redux';
 import { selectIsAuthenticated } from '../store/slices/authSlice';
 
 /**
@@ -9,7 +9,7 @@ import { selectIsAuthenticated } from '../store/slices/authSlice';
  * navigation state so the app can redirect back after successful login.
  */
 export default function ProtectedRoute() {
-  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const location = useLocation();
 
   if (!isAuthenticated) {

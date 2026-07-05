@@ -8,8 +8,10 @@ from app.config import settings
 from app.db import Base, engine
 
 from app.api import auth
+
 import app.models
-from app.api import accounts  # noqa: F401 - registers all model classes on Base before create_all
+from app.api import accounts
+from app.api import transactions  # noqa: F401 - registers all model classes on Base before create_all
 
 # Dev convenience: create tables on startup if they don't exist yet.
 # Swap for Alembic migrations once the schema starts changing often.
@@ -34,7 +36,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(accounts.router)
-
+app.include_router(transactions.router)
 
 @app.get("/")
 def root():

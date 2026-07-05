@@ -1,13 +1,14 @@
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { Menu, Moon, Sun, LogOut, User } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Menu, Moon, Sun, LogOut, User, Landmark } from 'lucide-react';
+import { useAppDispatch, useAppSelector } from '../hooks/redux';
 import { logout, selectCurrentUser } from '../store/slices/authSlice';
 import { useTheme } from '../context/ThemeContext';
+import StampBadge from '../components/StampBadge';
 
 export default function Header({ onMenuClick }) {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const user = useSelector(selectCurrentUser);
+  const user = useAppSelector(selectCurrentUser);
   const { theme, toggleTheme } = useTheme();
 
   const handleLogout = () => {
@@ -16,8 +17,7 @@ export default function Header({ onMenuClick }) {
   };
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-surface px-4 sm:px-6">
-      {/* Left side: Menu & Title */}
+    <header className="ledger-rule-top sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-surface px-4 sm:px-6">
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -27,12 +27,13 @@ export default function Header({ onMenuClick }) {
         >
           <Menu size={20} />
         </button>
-        <span className="text-lg font-semibold text-text">Finance Tracker</span>
+        <Link to="/" className="flex items-center gap-2 hover:opacity-80">
+          <StampBadge icon={Landmark} color="blue" size={28} />
+          <span className="font-display text-lg font-semibold tracking-tight text-text">Finance Tracker</span>
+        </Link>
       </div>
 
-      {/* Right side: All items in parallel */}
       <div className="flex items-center gap-2">
-        {/* Theme Toggle */}
         <button
           type="button"
           onClick={toggleTheme}
@@ -42,7 +43,6 @@ export default function Header({ onMenuClick }) {
           {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
         </button>
 
-        {/* User Info (Now just a flat layout block, not a clickable menu trigger) */}
         <div className="flex items-center gap-2 rounded-md p-2 text-muted">
           <User size={18} />
           <span className="hidden text-sm sm:inline">
@@ -50,7 +50,6 @@ export default function Header({ onMenuClick }) {
           </span>
         </div>
 
-        {/* Log Out Button (Parallel to everything else) */}
         <button
           type="button"
           onClick={handleLogout}

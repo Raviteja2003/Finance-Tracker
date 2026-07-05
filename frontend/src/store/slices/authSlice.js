@@ -1,26 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import type { RootState } from '../store';
 import apiRequest from '../../lib/apiClient';
-
-interface RegisterPayload {
-  name: string;
-  email: string;
-  password: string;
-}
-
-interface LoginPayload {
-  email: string;
-  password: string;
-}
-
-interface AuthUser {
-  [key: string]: unknown;
-}
-
-interface AuthResponse {
-  access_token?: string;
-  user?: AuthUser;
-}
 
 const tokenFromStorage = typeof window !== 'undefined' ? localStorage.getItem('ft_token') : null;
 
@@ -34,20 +13,17 @@ const tokenFromStorage = typeof window !== 'undefined' ? localStorage.getItem('f
  * - `error` stores the last error message if any operation failed.
  */
 const initialState = {
-  token: tokenFromStorage || null as string | null,
-  user: null as AuthUser | null,
+  token: tokenFromStorage || null,
+  user: null,
   isAuthenticated: Boolean(tokenFromStorage),
-  status: 'idle' as 'idle' | 'loading' | 'succeeded' | 'failed',
-  error: null as string | null,
+  status: 'idle',
+  error: null,
 };
 
 /**
  * Async thunk that calls POST /auth/register to create a new user account.
- *
- * @param {{ name: string; email: string; password: string }} - User registration details.
- * @returns The created user object (backend does not return a token).
  */
-export const registerUser = createAsyncThunk<AuthUser, RegisterPayload, { rejectValue: string; state: RootState }>(
+export const registerUser = createAsyncThunk(
   'auth/registerUser',
   async ({ name, email, password }, { rejectWithValue }) => {
     try {
@@ -55,10 +31,8 @@ export const registerUser = createAsyncThunk<AuthUser, RegisterPayload, { reject
         method: 'POST',
         body: { name, email, password },
       });
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        return rejectWithValue(err.message);
-      }
+    } catch (err) {
+      if (err instanceof Error) return rejectWithValue(err.message);
       return rejectWithValue('Registration failed');
     }
   },
@@ -66,11 +40,8 @@ export const registerUser = createAsyncThunk<AuthUser, RegisterPayload, { reject
 
 /**
  * Async thunk that calls POST /auth/login to authenticate a user.
- *
- * @param {{ email: string; password: string }} - User login credentials.
- * @returns Login response with access_token and user object.
  */
-export const loginUser = createAsyncThunk<AuthResponse, LoginPayload, { rejectValue: string; state: RootState }>(
+export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async ({ email, password }, { rejectWithValue }) => {
     try {
@@ -78,10 +49,8 @@ export const loginUser = createAsyncThunk<AuthResponse, LoginPayload, { rejectVa
         method: 'POST',
         body: { email, password },
       });
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        return rejectWithValue(err.message);
-      }
+    } catch (err) {
+      if (err instanceof Error) return rejectWithValue(err.message);
       return rejectWithValue('Login failed');
     }
   },
@@ -89,24 +58,19 @@ export const loginUser = createAsyncThunk<AuthResponse, LoginPayload, { rejectVa
 
 /**
  * Async thunk that calls GET /auth/me to fetch the current authenticated user.
- *
- * @returns The current user object from the server.
  */
-export const fetchCurrentUser = createAsyncThunk<AuthUser, void, { rejectValue: string; state: RootState }>(
+export const fetchCurrentUser = createAsyncThunk(
   'auth/fetchCurrentUser',
   async (_args, { getState, rejectWithValue }) => {
     try {
       const token = getState().auth.token;
       return await apiRequest('/auth/me', { token: token ?? undefined });
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        return rejectWithValue(err.message);
-      }
+    } catch (err) {
+      if (err instanceof Error) return rejectWithValue(err.message);
       return rejectWithValue('Failed to load user');
     }
   },
 );
-
 
 const authSlice = createSlice({
   name: 'auth',
@@ -150,7 +114,7 @@ const authSlice = createSlice({
         state.status = 'succeeded';
         // Register doesn't return a token (backend returns the created
         // user only) - Register.jsx chains straight into loginUser after
-        // this resolves, same as it did with RTK Query mutations.
+        // this resolves.
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.status = 'failed';
@@ -166,28 +130,8 @@ const authSlice = createSlice({
 export const { logout } = authSlice.actions;
 export default authSlice.reducer;
 
-/**
- * Selector for the current authenticated user object.
- */
-export const selectCurrentUser = (state: RootState) => state.auth.user;
-
-/**
- * Selector that returns whether the user is authenticated.
- */
-export const selectIsAuthenticated = (state: RootState) => state.auth.isAuthenticated;
-
-/**
- * Selector for the stored auth token.
- */
-export const selectToken = (state: RootState) => state.auth.token;
-
-/**
- * Selector for the current async operation status.
- * Returns 'idle' | 'loading' | 'succeeded' | 'failed'.
- */
-export const selectAuthStatus = (state: RootState) => state.auth.status;
-
-/**
- * Selector for the last auth error message, if any.
- */
-export const selectAuthError = (state: RootState) => state.auth.error;
+export const selectCurrentUser = (state) => state.auth.user;
+export const selectIsAuthenticated = (state) => state.auth.isAuthenticated;
+export const selectToken = (state) => state.auth.token;
+export const selectAuthStatus = (state) => state.auth.status;
+export const selectAuthError = (state) => state.auth.error;

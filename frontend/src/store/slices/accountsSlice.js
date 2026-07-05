@@ -1,76 +1,44 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import type { RootState } from '../store';
 import apiRequest from '../../lib/apiClient';
 
-// Account types must match the backend AccountType enum exactly
-export type AccountType = 'checking' | 'savings' | 'credit_card' | 'cash';
+// Account types must match the backend AccountType enum exactly:
+// 'checking' | 'savings' | 'credit_card' | 'cash' | 'salary' | 'fixed_deposit'
 
-export interface Account {
-  id: string;
-  user_id: string;
-  name: string;
-  type: AccountType;
-  balance: number;
-  created_at: string;
-}
-
-interface CreateAccountPayload {
-  name: string;
-  type: AccountType;
-  balance: number;
-}
-
-interface UpdateAccountPayload {
-  id: string;
-  name: string;
-  type: AccountType;
-  balance: number;
-}
-
-interface AccountsState {
+const initialState = {
   // Server data — lives here instead of an RTK Query cache since we're
   // using createAsyncThunk throughout this project. The tradeoff vs RTK
   // Query is that we manage loading/error state manually (below), but we
   // get a simpler mental model: one slice owns everything about accounts.
-  list: Account[];
-  status: 'idle' | 'loading' | 'succeeded' | 'failed';
-  error: string | null;
+  list: [],
+  status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+  error: null,
 
   // UI-only state — independent of the server data above
-  selectedAccountId: string | null;
-  isModalOpen: boolean;
-  editingAccountId: string | null; // null = create mode, id = edit mode
-}
-
-const initialState: AccountsState = {
-  list: [],
-  status: 'idle',
-  error: null,
   selectedAccountId: null,
   isModalOpen: false,
-  editingAccountId: null,
+  editingAccountId: null, // null = create mode, id = edit mode
 };
 
 // --- helpers ---
 
-function getToken(state: RootState): string | undefined {
+function getToken(state) {
   return state.auth.token ?? undefined;
 }
 
 // --- async thunks ---
 
-export const fetchAccounts = createAsyncThunk<Account[], void, { rejectValue: string; state: RootState }>(
+export const fetchAccounts = createAsyncThunk(
   'accounts/fetchAccounts',
   async (_args, { getState, rejectWithValue }) => {
     try {
       return await apiRequest('/accounts', { token: getToken(getState()) });
-    } catch (err: unknown) {
+    } catch (err) {
       return rejectWithValue(err instanceof Error ? err.message : 'Failed to fetch accounts');
     }
   },
 );
 
-export const createAccount = createAsyncThunk<Account, CreateAccountPayload, { rejectValue: string; state: RootState }>(
+export const createAccount = createAsyncThunk(
   'accounts/createAccount',
   async (payload, { getState, rejectWithValue }) => {
     try {
@@ -79,13 +47,13 @@ export const createAccount = createAsyncThunk<Account, CreateAccountPayload, { r
         body: payload,
         token: getToken(getState()),
       });
-    } catch (err: unknown) {
+    } catch (err) {
       return rejectWithValue(err instanceof Error ? err.message : 'Failed to create account');
     }
   },
 );
 
-export const updateAccount = createAsyncThunk<Account, UpdateAccountPayload, { rejectValue: string; state: RootState }>(
+export const updateAccount = createAsyncThunk(
   'accounts/updateAccount',
   async ({ id, ...body }, { getState, rejectWithValue }) => {
     try {
@@ -94,13 +62,13 @@ export const updateAccount = createAsyncThunk<Account, UpdateAccountPayload, { r
         body,
         token: getToken(getState()),
       });
-    } catch (err: unknown) {
+    } catch (err) {
       return rejectWithValue(err instanceof Error ? err.message : 'Failed to update account');
     }
   },
 );
 
-export const deleteAccount = createAsyncThunk<string, string, { rejectValue: string; state: RootState }>(
+export const deleteAccount = createAsyncThunk(
   'accounts/deleteAccount',
   async (id, { getState, rejectWithValue }) => {
     try {
@@ -109,7 +77,7 @@ export const deleteAccount = createAsyncThunk<string, string, { rejectValue: str
         token: getToken(getState()),
       });
       return id; // return the id so the reducer can remove it from the list
-    } catch (err: unknown) {
+    } catch (err) {
       return rejectWithValue(err instanceof Error ? err.message : 'Failed to delete account');
     }
   },
@@ -121,14 +89,14 @@ const accountsSlice = createSlice({
   name: 'accounts',
   initialState,
   reducers: {
-    selectAccount: (state, action: { payload: string | null }) => {
+    selectAccount: (state, action) => {
       state.selectedAccountId = action.payload;
     },
     openCreateModal: (state) => {
       state.isModalOpen = true;
       state.editingAccountId = null;
     },
-    openEditModal: (state, action: { payload: string }) => {
+    openEditModal: (state, action) => {
       state.isModalOpen = true;
       state.editingAccountId = action.payload;
     },
@@ -176,13 +144,13 @@ export default accountsSlice.reducer;
 
 // --- selectors ---
 
-export const selectAccountsList = (state: RootState) => state.accounts.list;
-export const selectAccountsStatus = (state: RootState) => state.accounts.status;
-export const selectAccountsError = (state: RootState) => state.accounts.error;
-export const selectSelectedAccountId = (state: RootState) => state.accounts.selectedAccountId;
-export const selectIsModalOpen = (state: RootState) => state.accounts.isModalOpen;
-export const selectEditingAccountId = (state: RootState) => state.accounts.editingAccountId;
+export const selectAccountsList = (state) => state.accounts.list;
+export const selectAccountsStatus = (state) => state.accounts.status;
+export const selectAccountsError = (state) => state.accounts.error;
+export const selectSelectedAccountId = (state) => state.accounts.selectedAccountId;
+export const selectIsModalOpen = (state) => state.accounts.isModalOpen;
+export const selectEditingAccountId = (state) => state.accounts.editingAccountId;
 
 // Derived selector — find the account currently being edited
-export const selectEditingAccount = (state: RootState): Account | undefined =>
+export const selectEditingAccount = (state) =>
   state.accounts.list.find((a) => a.id === state.accounts.editingAccountId);

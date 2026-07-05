@@ -21,7 +21,6 @@ const navItems = [
 export default function Sidebar({ open, onClose }) {
   return (
     <>
-      {/* Mobile backdrop */}
       {open && (
         <div
           className="fixed inset-0 z-30 bg-black/40 lg:hidden"
@@ -35,7 +34,7 @@ export default function Sidebar({ open, onClose }) {
           ${open ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="flex h-16 items-center justify-between px-4 lg:hidden">
-          <span className="text-lg font-semibold text-text">Menu</span>
+          <span className="font-display text-lg font-semibold text-text">Menu</span>
           <button
             type="button"
             onClick={onClose}
@@ -53,10 +52,10 @@ export default function Sidebar({ open, onClose }) {
               to={to}
               onClick={onClose}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors
+                `relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors
                 ${
                   isActive
-                    ? 'bg-primary/10 text-primary'
+                    ? 'bg-primary/10 text-primary before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-0.5 before:rounded-full before:bg-primary'
                     : 'text-muted hover:bg-surface-hover hover:text-text'
                 }`
               }

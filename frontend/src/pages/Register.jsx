@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { Landmark } from 'lucide-react';
+import { useAppDispatch, useAppSelector } from '../hooks/redux';
 import {
   registerUser,
   loginUser,
@@ -18,19 +19,12 @@ export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const dispatch = useDispatch<any>();
-  const status = useSelector(selectAuthStatus);
-  const error = useSelector(selectAuthError);
+  const dispatch = useAppDispatch();
+  const status = useAppSelector(selectAuthStatus);
+  const error = useAppSelector(selectAuthError);
   const isLoading = status === 'loading';
   const navigate = useNavigate();
 
-  /**
-   * Handles the registration form submission.
-   *
-   * Calls registerUser first to create the account. If successful,
-   * chains into loginUser to sign the user in immediately.
-   * Redirects to the dashboard on successful login.
-   */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -38,7 +32,7 @@ export default function Register() {
     if (!registerUser.fulfilled.match(registerResult)) return; // error already in state
 
     // Backend's /auth/register returns the created user, not a token,
-    // so chain straight into loginUser to land the user signed in -
+    // so chain straight into loginUser to land the user signed in.
     const loginResult = await dispatch(loginUser({ email, password }));
     if (loginUser.fulfilled.match(loginResult)) {
       navigate('/dashboard', { replace: true });
@@ -47,13 +41,22 @@ export default function Register() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg px-4">
-      <div className="w-full max-w-sm rounded-lg border border-border bg-surface p-8">
-        <h1 className="text-xl font-semibold text-text">Create your account</h1>
-        <p className="mt-1 text-sm text-muted">Takes less than a minute.</p>
+      <div className="w-full max-w-sm rounded-lg border border-border bg-surface p-8 shadow-sm">
+        <div className="flex flex-col items-center text-center">
+          <Link to="/" className="flex items-center gap-2 hover:opacity-80">
+            <span className="flex h-9 w-9 items-center justify-center rounded-md bg-primary">
+              <Landmark size={18} color="white" />
+            </span>
+            <span className="font-display text-lg font-semibold tracking-tight text-text">Finance Tracker</span>
+          </Link>
+
+          <h1 className="font-display mt-5 text-2xl font-semibold tracking-tight text-text">Create your account</h1>
+          <p className="mt-1 text-sm text-muted">Takes less than a minute.</p>
+        </div>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-text">
+            <label htmlFor="name" className="block text-sm font-medium text-text/80">
               Name
             </label>
             <input
@@ -62,12 +65,13 @@ export default function Register() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full rounded-md border border-border bg-bg px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Your name"
+              className="mt-1.5 w-full rounded-md border border-border bg-bg px-3 py-2 text-sm text-text outline-none focus:border-primary"
             />
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-text">
+            <label htmlFor="email" className="block text-sm font-medium text-text/80">
               Email
             </label>
             <input
@@ -76,12 +80,13 @@ export default function Register() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-md border border-border bg-bg px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="you@example.com"
+              className="mt-1.5 w-full rounded-md border border-border bg-bg px-3 py-2 text-sm text-text outline-none focus:border-primary"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-text">
+            <label htmlFor="password" className="block text-sm font-medium text-text/80">
               Password
             </label>
             <input
@@ -91,7 +96,8 @@ export default function Register() {
               minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-md border border-border bg-bg px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="At least 8 characters"
+              className="mt-1.5 w-full rounded-md border border-border bg-bg px-3 py-2 text-sm text-text outline-none focus:border-primary"
             />
           </div>
 
@@ -100,7 +106,7 @@ export default function Register() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60"
+            className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:opacity-60"
           >
             {isLoading ? 'Creating account…' : 'Create account'}
           </button>
