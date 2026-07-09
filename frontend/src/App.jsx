@@ -7,6 +7,7 @@ import AppLayout from './components/AppLayout';
 import Accounts from './pages/Accounts';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
+import Categories from './pages/Categories';
 import Budgets from './pages/Budgets';
 import Analytics from './pages/Analytics';
 import ChatAssistant from './pages/ChatAssistant';
@@ -33,6 +34,7 @@ export default function App() {
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/transactions" element={<Transactions />} />
+          <Route path="/categories" element={<Categories />} />
           <Route path="/accounts" element={<Accounts />} />
           <Route path="/budgets" element={<Budgets />} />
           <Route path="/analytics" element={<Analytics />} />

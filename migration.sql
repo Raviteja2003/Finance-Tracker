@@ -22,3 +22,23 @@ ALTER TABLE accounts ADD COLUMN IF NOT EXISTS maturity_date TIMESTAMP;
 -- Sanity check afterwards:
 -- SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'accounts';
 -- SELECT enum_range(NULL::accounttype);
+
+-- 3. Categories: new `type` column (income/expense). The categories table
+-- already existed (name + color only) before this feature, so create_all()
+-- won't add the column on its own - same story as the accounts columns
+-- above.
+DO $$ BEGIN
+    CREATE TYPE categorytype AS ENUM ('income', 'expense');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+-- Backfill existing rows (if any) as 'expense' before making the column
+-- NOT NULL, since there's no sensible default to infer from name/color.
+ALTER TABLE categories ADD COLUMN IF NOT EXISTS type categorytype;
+UPDATE categories SET type = 'expense' WHERE type IS NULL;
+ALTER TABLE categories ALTER COLUMN type SET NOT NULL;
+
+-- Sanity check afterwards:
+-- SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'categories';
+-- SELECT enum_range(NULL::categorytype);

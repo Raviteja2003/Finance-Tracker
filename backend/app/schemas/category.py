@@ -1,4 +1,25 @@
-"""Pydantic schemas for Category create/read
+from pydantic import BaseModel, ConfigDict, Field
 
-To be implemented in Phase 1+.
-"""
+from app.models.category import CategoryType
+
+
+class CategoryCreate(BaseModel):
+    name: str
+    type: CategoryType
+    color: str | None = Field(default=None, description="Hex color, e.g. #4f46e5")
+
+
+class CategoryUpdate(BaseModel):
+    name: str
+    type: CategoryType
+    color: str | None = None
+
+
+class CategoryOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    user_id: str
+    name: str
+    type: CategoryType
+    color: str | None = None
