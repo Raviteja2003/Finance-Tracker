@@ -1,7 +1,11 @@
-import { useEffect, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../hooks/redux';
-import FilterBar from '../components/FilterBar';
-import { fetchAccounts, selectAccountsList, selectAccountsStatus } from '../store/slices/accountsSlice';
+import { useEffect, useState } from "react";
+import { useAppDispatch, useAppSelector } from "../hooks/redux";
+import FilterBar from "../components/FilterBar";
+import {
+  fetchAccounts,
+  selectAccountsList,
+  selectAccountsStatus,
+} from "../store/slices/accountsSlice";
 import {
   fetchTransactions,
   createTransaction,
@@ -15,10 +19,19 @@ import {
   selectTransactionsError,
   selectIsModalOpen,
   selectEditingTransaction,
-} from '../store/slices/transactionsSlice';
+} from "../store/slices/transactionsSlice";
+
+import {
+  fetchCategories,
+  selectCategoriesList,
+  selectCategoriesStatus,
+} from "../store/slices/categoriesSlice";
 
 function formatAmount(value, isIncome) {
-  const formatted = value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+  const formatted = value.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+  });
   return isIncome ? `+${formatted}` : `-${formatted}`;
 }
 
@@ -31,16 +44,23 @@ export default function Transactions() {
   const filtered = useAppSelector(selectFilteredTransactions);
   const isModalOpen = useAppSelector(selectIsModalOpen);
   const editingTransaction = useAppSelector(selectEditingTransaction);
-
+  const categories = useAppSelector(selectCategoriesList);
+  const categoriesStatus = useAppSelector(selectCategoriesStatus);
   const [confirmingDeleteId, setConfirmingDeleteId] = useState(null);
 
   useEffect(() => {
-    if (accountsStatus === 'idle') dispatch(fetchAccounts());
+    if (accountsStatus === "idle") dispatch(fetchAccounts());
   }, [accountsStatus, dispatch]);
 
   useEffect(() => {
-    if (status === 'idle') dispatch(fetchTransactions());
+    if (status === "idle") dispatch(fetchTransactions());
   }, [status, dispatch]);
+
+  useEffect(() => {
+    if (categoriesStatus === "idle") dispatch(fetchCategories());
+  }, [categoriesStatus, dispatch]);
+
+  const categoryById = new Map(categories.map((c) => [c.id, c]));
 
   const accountNameById = new Map(accounts.map((a) => [a.id, a.name]));
 
@@ -48,12 +68,16 @@ export default function Transactions() {
     <div className="mx-auto max-w-5xl px-6 py-8">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-text">Transactions</h1>
-          <p className="mt-1.5 text-sm text-muted">All transactions across your accounts.</p>
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-text">
+            Transactions
+          </h1>
+          <p className="mt-1.5 text-sm text-muted">
+            All transactions across your accounts.
+          </p>
         </div>
         <button
           onClick={() => dispatch(openCreateModal())}
-          disabled={accounts.length === 0}
+          disabled={accounts.length === 0 || categories.length === 0}
           className="shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary/90 disabled:opacity-50"
         >
           Add transaction
@@ -64,8 +88,10 @@ export default function Transactions() {
         <FilterBar />
       </div>
 
-      {accounts.length === 0 && accountsStatus !== 'loading' && (
-        <p className="mt-4 text-sm text-muted">Add an account first before recording transactions.</p>
+      {accounts.length === 0 && accountsStatus !== "loading" && (
+        <p className="mt-4 text-sm text-muted">
+          Add an account first before recording transactions.
+        </p>
       )}
 
       {error && (
@@ -80,31 +106,51 @@ export default function Transactions() {
         </div>
       )}
 
-      {status === 'loading' && (
+      {status === "loading" && (
         <div className="mt-6 space-y-2">
           {[0, 1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-11 animate-pulse rounded-md border border-border bg-surface" />
+            <div
+              key={i}
+              className="h-11 animate-pulse rounded-md border border-border bg-surface"
+            />
           ))}
         </div>
       )}
 
-      {status !== 'loading' && !error && filtered.length === 0 && (
+      {status !== "loading" && !error && filtered.length === 0 && (
         <div className="mt-6 rounded-md border border-dashed border-border px-6 py-12 text-center">
-          <p className="font-display text-lg text-text">No transactions match these filters</p>
-          <p className="mt-1 text-sm text-muted">Try widening the date range, clearing a filter, or add one above.</p>
+          <p className="font-display text-lg text-text">
+            No transactions match these filters
+          </p>
+          <p className="mt-1 text-sm text-muted">
+            Try widening the date range, clearing a filter, or add one above.
+          </p>
         </div>
       )}
 
-      {status !== 'loading' && filtered.length > 0 && (
+      {status !== "loading" && filtered.length > 0 && (
         <div className="ledger-rule-top mt-6 overflow-hidden rounded-md border border-border">
           <table className="w-full text-sm">
             <thead className="bg-surface text-left">
               <tr>
-                <th className="px-4 py-3"><span className="ledger-eyebrow">Date</span></th>
-                <th className="px-4 py-3"><span className="ledger-eyebrow">Description</span></th>
-                <th className="px-4 py-3"><span className="ledger-eyebrow">Account</span></th>
-                <th className="px-4 py-3 text-right"><span className="ledger-eyebrow">Amount</span></th>
-                <th className="px-4 py-3 text-right"><span className="ledger-eyebrow">Actions</span></th>
+                <th className="px-4 py-3">
+                  <span className="ledger-eyebrow">Date</span>
+                </th>
+                <th className="px-4 py-3">
+                  <span className="ledger-eyebrow">Description</span>
+                </th>
+                <th className="px-4 py-3">
+                  <span className="ledger-eyebrow">Account</span>
+                </th>
+                <th className="px-4 py-3">
+                  <span className="ledger-eyebrow">Category</span>
+                </th>
+                <th className="px-4 py-3 text-right">
+                  <span className="ledger-eyebrow">Amount</span>
+                </th>
+                <th className="px-4 py-3 text-right">
+                  <span className="ledger-eyebrow">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-dotted divide-border">
@@ -112,12 +158,33 @@ export default function Transactions() {
                 const isConfirming = confirmingDeleteId === t.id;
                 return (
                   <tr key={t.id} className="group bg-bg hover:bg-surface/50">
-                    <td className="whitespace-nowrap px-4 py-2.5 font-mono text-xs text-muted">{t.date.slice(0, 10)}</td>
-                    <td className="px-4 py-2.5 text-text">{t.description || '—'}</td>
-                    <td className="px-4 py-2.5 text-muted">{accountNameById.get(t.account_id) ?? 'Unknown'}</td>
+                    <td className="whitespace-nowrap px-4 py-2.5 font-mono text-xs text-muted">
+                      {t.date.slice(0, 10)}
+                    </td>
+                    <td className="px-4 py-2.5 text-text">
+                      {t.description || "—"}
+                    </td>
+                    <td className="px-4 py-2.5 text-muted">
+                      {accountNameById.get(t.account_id) ?? "Unknown"}
+                    </td>
+                    <td className="px-4 py-2.5 text-muted">
+                      {(() => {
+                        const cat = categoryById.get(t.category_id);
+                        if (!cat) return "—";
+                        return (
+                          <span className="inline-flex items-center gap-1.5">
+                            <span
+                              className="h-2 w-2 rounded-full"
+                              style={{ backgroundColor: cat.color }}
+                            />
+                            {cat.name}
+                          </span>
+                        );
+                      })()}
+                    </td>
                     <td
                       className={`whitespace-nowrap px-4 py-2.5 text-right font-mono tabular-nums ${
-                        t.is_income ? 'text-success' : 'text-text'
+                        t.is_income ? "text-success" : "text-text"
                       }`}
                     >
                       {formatAmount(t.amount, t.is_income)}
@@ -168,9 +235,10 @@ export default function Transactions() {
 
       {isModalOpen && (
         <TransactionModal
-          key={editingTransaction?.id ?? 'create'}
+          key={editingTransaction?.id ?? "create"}
           initial={editingTransaction ?? null}
           accounts={accounts}
+          categories={categories}
           onClose={() => dispatch(closeModal())}
         />
       )}
@@ -178,17 +246,37 @@ export default function Transactions() {
   );
 }
 
-function TransactionModal({ initial, accounts, onClose }) {
+function TransactionModal({ initial, accounts, categories, onClose }) {
   const dispatch = useAppDispatch();
   const isEditing = initial !== null;
 
-  const [accountId, setAccountId] = useState(initial?.account_id ?? accounts[0]?.id ?? '');
-  const [amount, setAmount] = useState(initial ? String(initial.amount) : '');
-  const [description, setDescription] = useState(initial?.description ?? '');
-  const [date, setDate] = useState(initial ? initial.date.slice(0, 10) : new Date().toISOString().slice(0, 10));
+  const [accountId, setAccountId] = useState(
+    initial?.account_id ?? accounts[0]?.id ?? "",
+  );
+  const [categoryId, setCategoryId] = useState(initial?.category_id ?? "");
+  const [amount, setAmount] = useState(initial ? String(initial.amount) : "");
+  const [description, setDescription] = useState(initial?.description ?? "");
+  const [date, setDate] = useState(
+    initial ? initial.date.slice(0, 10) : new Date().toISOString().slice(0, 10),
+  );
   const [isIncome, setIsIncome] = useState(initial?.is_income ?? false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
+
+  // Category options depend on the income/expense toggle, since a category
+  // is one or the other (enforced server-side in _verify_category).
+  const filteredCategories = categories.filter((c) =>
+    isIncome ? c.type === "income" : c.type === "expense",
+  );
+
+  useEffect(() => {
+    // Whenever the toggle flips, the previously selected category may no
+    // longer be valid for this type - reset unless it's still in the list
+    // (covers initial load when editing).
+    if (!filteredCategories.some((c) => c.id === categoryId)) {
+      setCategoryId("");
+    }
+  }, [isIncome]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -196,16 +284,25 @@ function TransactionModal({ initial, accounts, onClose }) {
 
     const parsedAmount = Number(amount);
     if (!accountId) {
-      setFormError('Choose an account.');
+      setFormError("Choose an account.");
       return;
     }
-    if (amount.trim() === '' || Number.isNaN(parsedAmount) || parsedAmount <= 0) {
-      setFormError('Enter a valid amount greater than 0.');
+    if (!categoryId) {
+      setFormError("Choose a category.");
+      return;
+    }
+    if (
+      amount.trim() === "" ||
+      Number.isNaN(parsedAmount) ||
+      parsedAmount <= 0
+    ) {
+      setFormError("Enter a valid amount greater than 0.");
       return;
     }
 
     const payload = {
       account_id: accountId,
+      category_id: categoryId,
       amount: parsedAmount,
       description: description.trim() || null,
       date: `${date}T00:00:00`,
@@ -215,25 +312,34 @@ function TransactionModal({ initial, accounts, onClose }) {
     setIsSubmitting(true);
     try {
       if (isEditing) {
-        await dispatch(updateTransaction({ id: initial.id, ...payload })).unwrap();
+        await dispatch(
+          updateTransaction({ id: initial.id, ...payload }),
+        ).unwrap();
       } else {
         await dispatch(createTransaction(payload)).unwrap();
       }
       onClose();
     } catch (err) {
-      setFormError(typeof err === 'string' ? err : 'Something went wrong. Try again.');
+      setFormError(
+        typeof err === "string" ? err : "Something went wrong. Try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+      onClick={onClose}
+    >
       <div
         onClick={(e) => e.stopPropagation()}
         className="ledger-rule-top w-full max-w-sm rounded-lg border border-border bg-bg p-6 shadow-xl"
       >
-        <h2 className="font-display text-xl font-semibold text-text">{isEditing ? 'Edit transaction' : 'Add transaction'}</h2>
+        <h2 className="font-display text-xl font-semibold text-text">
+          {isEditing ? "Edit transaction" : "Add transaction"}
+        </h2>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           {/* Income / expense toggle */}
@@ -242,7 +348,7 @@ function TransactionModal({ initial, accounts, onClose }) {
               type="button"
               onClick={() => setIsIncome(false)}
               className={`flex-1 rounded py-1.5 text-sm font-medium transition ${
-                !isIncome ? 'bg-text/10 text-text' : 'text-muted'
+                !isIncome ? "bg-text/10 text-text" : "text-muted"
               }`}
             >
               Expense
@@ -251,7 +357,7 @@ function TransactionModal({ initial, accounts, onClose }) {
               type="button"
               onClick={() => setIsIncome(true)}
               className={`flex-1 rounded py-1.5 text-sm font-medium transition ${
-                isIncome ? 'bg-success/15 text-success' : 'text-muted'
+                isIncome ? "bg-success/15 text-success" : "text-muted"
               }`}
             >
               Income
@@ -259,7 +365,10 @@ function TransactionModal({ initial, accounts, onClose }) {
           </div>
 
           <div>
-            <label htmlFor="tx-account" className="block text-sm font-medium text-text/80">
+            <label
+              htmlFor="tx-account"
+              className="block text-sm font-medium text-text/80"
+            >
               Account
             </label>
             <select
@@ -277,7 +386,40 @@ function TransactionModal({ initial, accounts, onClose }) {
           </div>
 
           <div>
-            <label htmlFor="tx-amount" className="block text-sm font-medium text-text/80">
+            <label
+              htmlFor="tx-category"
+              className="block text-sm font-medium text-text/80"
+            >
+              Category
+            </label>
+            <select
+              id="tx-category"
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              className="mt-1 w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm text-text outline-none focus:border-primary"
+            >
+              <option value="" className="bg-bg text-text">
+                Select a category…
+              </option>
+              {filteredCategories.map((c) => (
+                <option key={c.id} value={c.id} className="bg-bg text-text">
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            {filteredCategories.length === 0 && (
+              <p className="mt-1 text-xs text-muted">
+                No {isIncome ? "income" : "expense"} categories yet — add one on
+                the Categories page first.
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label
+              htmlFor="tx-amount"
+              className="block text-sm font-medium text-text/80"
+            >
               Amount
             </label>
             <input
@@ -294,7 +436,10 @@ function TransactionModal({ initial, accounts, onClose }) {
           </div>
 
           <div>
-            <label htmlFor="tx-description" className="block text-sm font-medium text-text/80">
+            <label
+              htmlFor="tx-description"
+              className="block text-sm font-medium text-text/80"
+            >
               Description
             </label>
             <input
@@ -308,7 +453,10 @@ function TransactionModal({ initial, accounts, onClose }) {
           </div>
 
           <div>
-            <label htmlFor="tx-date" className="block text-sm font-medium text-text/80">
+            <label
+              htmlFor="tx-date"
+              className="block text-sm font-medium text-text/80"
+            >
               Date
             </label>
             <input
@@ -335,7 +483,11 @@ function TransactionModal({ initial, accounts, onClose }) {
               disabled={isSubmitting}
               className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
             >
-              {isSubmitting ? 'Saving…' : isEditing ? 'Save changes' : 'Add transaction'}
+              {isSubmitting
+                ? "Saving…"
+                : isEditing
+                  ? "Save changes"
+                  : "Add transaction"}
             </button>
           </div>
         </form>

@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.models.account import Account
+from app.models.category import Category, CategoryType
 from app.models.transaction import Transaction
 from app.models.user import User
 from app.schemas.transaction import TransactionCreate, TransactionUpdate
@@ -22,6 +23,24 @@ def _verify_account_ownership(db: Session, account_id: str, user: User) -> Accou
     if not account:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
     return account
+
+
+def _verify_category(db: Session, category_id: str, is_income: bool, user: User) -> Category:
+    category = db.query(Category).filter(
+        Category.id == category_id,
+        Category.user_id == user.id,
+    ).first()
+    if not category:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
+
+    expected_type = CategoryType.income if is_income else CategoryType.expense
+    if category.type != expected_type:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"'{category.name}' is an {category.type.value} category and can't be used on "
+                   f"a{'n' if is_income else ''} {'income' if is_income else 'expense'} transaction",
+        )
+    return category
 
 
 def get_transactions(db: Session, user: User) -> list[Transaction]:
@@ -47,11 +66,8 @@ def get_transaction(db: Session, transaction_id: str, user: User) -> Transaction
 
 
 def create_transaction(db: Session, payload: TransactionCreate, user: User) -> Transaction:
-    # Confirms the account_id in the payload actually belongs to this user
-    # before attaching a transaction to it - without this, any authenticated
-    # user could write transactions onto someone else's account by guessing
-    # an account_id.
     account = _verify_account_ownership(db, payload.account_id, user)
+    _verify_category(db, payload.category_id, payload.is_income, user)
 
     transaction = Transaction(
         account_id=payload.account_id,
@@ -62,10 +78,6 @@ def create_transaction(db: Session, payload: TransactionCreate, user: User) -> T
         is_income=payload.is_income,
     )
     db.add(transaction)
-
-    # Running balance: applied in the same DB transaction as the insert,
-    # so the account and its transactions can't drift out of sync even if
-    # something fails partway through (db.commit() below covers both).
     account.balance += _transaction_delta(payload.amount, payload.is_income)
 
     db.commit()
@@ -76,20 +88,12 @@ def create_transaction(db: Session, payload: TransactionCreate, user: User) -> T
 def update_transaction(db: Session, transaction_id: str, payload: TransactionUpdate, user: User) -> Transaction:
     transaction = get_transaction(db, transaction_id, user)
 
-    # Reverse this transaction's old effect on its current account BEFORE
-    # touching anything else - uses the transaction's pre-update amount/
-    # is_income, not the payload's.
     old_account = db.query(Account).filter(Account.id == transaction.account_id).first()
     old_account.balance -= _transaction_delta(transaction.amount, transaction.is_income)
 
-    # Verify + fetch the target account (may be the same account, or a
-    # different one the user is moving this transaction to).
     new_account = _verify_account_ownership(db, payload.account_id, user)
+    _verify_category(db, payload.category_id, payload.is_income, user)
 
-    # Apply the new effect. If new_account is the same row as old_account,
-    # SQLAlchemy's identity map means this is the same Python object, so
-    # the net result is old_account.balance - old_delta + new_delta, which
-    # is exactly right whether or not the account changed.
     new_account.balance += _transaction_delta(payload.amount, payload.is_income)
 
     transaction.account_id = payload.account_id

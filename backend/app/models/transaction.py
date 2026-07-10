@@ -13,12 +13,13 @@ class Transaction(Base):
 
     id = Column(UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4()))
     account_id = Column(UUID(as_uuid=False), ForeignKey("accounts.id"), nullable=False)
-    category_id = Column(UUID(as_uuid=False), ForeignKey("categories.id"), nullable=True)
+    category_id = Column(UUID(as_uuid=False), ForeignKey("categories.id"), nullable=False)  # was nullable=True
     amount = Column(Float, nullable=False)
     description = Column(String, nullable=True)
     date = Column(DateTime, nullable=False, default=datetime.utcnow)
     is_income = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    
 
     account = relationship("Account", back_populates="transactions")
     category = relationship("Category", back_populates="transactions")

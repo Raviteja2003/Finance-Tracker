@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict
 
 class TransactionCreate(BaseModel):
     account_id: str
-    category_id: str | None = None
+    category_id: str
     amount: float
     description: str | None = None
     date: datetime | None = None  # defaults to now if omitted
@@ -14,7 +14,7 @@ class TransactionCreate(BaseModel):
 
 class TransactionUpdate(BaseModel):
     account_id: str
-    category_id: str | None = None
+    category_id: str
     amount: float
     description: str | None = None
     date: datetime
@@ -26,7 +26,7 @@ class TransactionOut(BaseModel):
 
     id: str
     account_id: str
-    category_id: str | None
+    category_id: str
     amount: float
     description: str | None
     date: datetime
