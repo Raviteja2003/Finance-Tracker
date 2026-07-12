@@ -14,12 +14,40 @@ function getDefaultDateRange() {
   const today = new Date();
   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
   return {
-    // ISO date strings (yyyy-mm-dd) so they serialize cleanly and are
-    // trivial to pass straight into <input type="date">.
     start: startOfMonth.toISOString().slice(0, 10),
     end: today.toISOString().slice(0, 10),
     preset: 'this_month', // 'this_month' | 'last_month' | 'last_30_days' | 'custom' | 'all_time'
   };
+}
+
+// Pure helper — the ONLY place date-range math should live. Given a preset
+// name, computes concrete start/end bounds. 'custom' is intentionally a
+// no-op here since its bounds come from user-picked dates, not math.
+function getDateRangeForPreset(preset, referenceDate = new Date()) {
+  const toISO = (d) => d.toISOString().slice(0, 10);
+  const today = referenceDate;
+
+  switch (preset) {
+    case 'this_month': {
+      const start = new Date(today.getFullYear(), today.getMonth(), 1);
+      return { start: toISO(start), end: toISO(today), preset };
+    }
+    case 'last_month': {
+      const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const end = new Date(today.getFullYear(), today.getMonth(), 0); // day 0 = last day of prev month
+      return { start: toISO(start), end: toISO(end), preset };
+    }
+    case 'last_30_days': {
+      const start = new Date(today);
+      start.setDate(start.getDate() - 30);
+      return { start: toISO(start), end: toISO(today), preset };
+    }
+    case 'all_time':
+      return { start: null, end: null, preset };
+    case 'custom':
+    default:
+      return { preset };
+  }
 }
 
 const initialState = {
@@ -35,7 +63,16 @@ const filtersSlice = createSlice({
   initialState,
   reducers: {
     setDateRange: (state, action) => {
-      state.dateRange = { ...state.dateRange, ...action.payload };
+      const { preset } = action.payload;
+      if (preset && preset !== 'custom') {
+        // Known preset — always recompute both bounds so stale start/end
+        // from a previous preset can never leak through.
+        state.dateRange = getDateRangeForPreset(preset);
+      } else {
+        // 'custom' (or no preset given) — trust the explicit start/end
+        // passed in from the date-picker inputs.
+        state.dateRange = { ...state.dateRange, ...action.payload };
+      }
     },
     setAccountFilter: (state, action) => {
       state.accountIds = action.payload;
@@ -93,9 +130,6 @@ export const selectCategoryFilter = (state) => state.filters.categoryIds;
 export const selectTransactionTypeFilter = (state) => state.filters.transactionTypes;
 export const selectSearchText = (state) => state.filters.searchText;
 
-// Memoized derived selector — createSelector (from reselect, re-exported by
-// RTK) only recomputes when one of its inputs actually changes, instead of
-// on every dispatch/render.
 export const selectActiveFilterCount = createSelector(
   [selectAccountFilter, selectCategoryFilter, selectTransactionTypeFilter, selectSearchText, selectDateRange],
   (accountIds, categoryIds, transactionTypes, searchText, dateRange) => {
